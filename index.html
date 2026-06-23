@@ -160,6 +160,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
     // Bu iki değer gizli değildir; güvenlik veritabanındaki RLS kurallarıyla sağlanır.
     const SUPABASE_URL = "https://mobnfzdtacxplyqijiss.supabase.co";
@@ -270,9 +271,19 @@
       await load();
     }
 
+    // Görev tamamlandığında ekrana konfeti patlat.
+    function celebrate() {
+      if (typeof confetti !== "function") return;
+      confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+      // Yanlardan iki ek patlama, daha şenlikli olsun.
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 } }), 150);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 } }), 150);
+    }
+
     async function toggleTodo(id, done) {
       const { error } = await sb.from("todos").update({ done }).eq("id", id);
       if (error) { showErr(appError, error.message); return; }
+      if (done) celebrate(); // yalnızca tamamlanırken (işareti kaldırırken değil)
       await load();
     }
 
