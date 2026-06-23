@@ -1,16 +1,35 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Todo Uygulaması</title>
+  <title>Task Manager</title>
   <style>
+    :root {
+      --navy:        #0a192f;
+      --navy-2:      #07111f;
+      --green-bg:    #0a2018;
+      --panel:       #0f223b;
+      --panel-2:     #0c1d33;
+      --row-alt:     #0e2036;
+      --border:      rgba(148, 163, 184, 0.15);
+      --border-soft: rgba(148, 163, 184, 0.08);
+      --green:       #15803d;
+      --green-hi:    #1aa35f;
+      --green-soft:  rgba(26, 163, 95, 0.15);
+      --text:        #e6edf3;
+      --muted:       #8aa0b6;
+      --danger:      #f87171;
+      --warning:     #fbbf24;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 55%, var(--green-bg) 100%);
       min-height: 100vh;
+      color: var(--text);
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -18,90 +37,118 @@
     }
 
     .app {
-      background: #fff;
+      background: var(--panel);
       width: 100%;
-      max-width: 480px;
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      max-width: 960px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
       overflow: hidden;
     }
 
     header {
-      padding: 24px;
-      background: #5a4ba0;
-      color: #fff;
+      padding: 22px 28px;
+      background: linear-gradient(90deg, #0e2a47 0%, #0f3d2e 100%);
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    header h1 { font-size: 22px; }
-    header .who { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+    header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.3px; }
+    header .who { font-size: 12px; color: var(--muted); margin-top: 3px; }
     #signout-btn {
-      border: 1px solid rgba(255,255,255,0.5); background: none; color: #fff;
-      padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.25); background: transparent; color: var(--text);
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background 0.15s;
     }
-    #signout-btn:hover { background: rgba(255,255,255,0.15); }
+    #signout-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
-    /* --- Giriş / Kayıt ekranı --- */
-    .auth { padding: 28px 24px; }
-    .auth h2 { font-size: 18px; color: #333; margin-bottom: 6px; }
-    .auth p.sub { font-size: 13px; color: #888; margin-bottom: 18px; }
-    .auth label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
-    .auth input {
-      width: 100%; padding: 12px 14px; border: 1px solid #ddd;
-      border-radius: 8px; font-size: 15px; outline: none;
-    }
-    .auth input:focus { border-color: #764ba2; }
-    .auth .primary {
-      width: 100%; margin-top: 18px; padding: 13px; border: none;
-      background: #764ba2; color: #fff; border-radius: 8px; font-size: 15px; cursor: pointer;
-    }
-    .auth .primary:hover { background: #5a4ba0; }
-    .auth .primary:disabled { opacity: 0.5; cursor: default; }
-    .auth .toggle { margin-top: 16px; text-align: center; font-size: 13px; color: #888; }
-    .auth .toggle a { color: #764ba2; cursor: pointer; text-decoration: underline; }
+    /* --- Auth screen --- */
+    .auth { padding: 34px 28px; max-width: 420px; margin: 0 auto; }
+    .auth h2 { font-size: 19px; margin-bottom: 6px; }
+    .auth p.sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .auth label { display: block; font-size: 12px; color: var(--muted);
+                  text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; }
 
-    /* --- Todo ekranı --- */
-    .input-row { display: flex; gap: 8px; padding: 20px 24px; border-bottom: 1px solid #eee; }
-    #new-task {
-      flex: 1; padding: 12px 14px; border: 1px solid #ddd;
-      border-radius: 8px; font-size: 15px; outline: none;
+    input, select {
+      width: 100%; padding: 11px 13px; background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none;
+      transition: border-color 0.15s;
     }
-    #new-task:focus { border-color: #764ba2; }
-    #add-btn {
-      padding: 12px 20px; border: none; background: #764ba2; color: #fff;
-      border-radius: 8px; font-size: 15px; cursor: pointer;
-    }
-    #add-btn:hover { background: #5a4ba0; }
-    #add-btn:disabled { opacity: 0.5; cursor: default; }
+    input::placeholder { color: #5d748c; }
+    input:focus, select:focus { border-color: var(--green-hi); }
+    input[type="date"] { color-scheme: dark; }
 
-    .filters { display: flex; gap: 6px; padding: 14px 24px 0; }
+    .btn-primary {
+      border: none; background: var(--green); color: #fff; font-weight: 600;
+      border-radius: 8px; font-size: 14px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--green-hi); }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    .auth .btn-primary { width: 100%; margin-top: 22px; padding: 12px; }
+    .auth .toggle { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
+    .auth .toggle a { color: var(--green-hi); cursor: pointer; }
+    .auth .toggle a:hover { text-decoration: underline; }
+
+    /* --- Add task toolbar --- */
+    .toolbar {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 150px 1.6fr auto;
+      gap: 10px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      align-items: end;
+    }
+    .toolbar .field label { display: block; font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .toolbar .btn-primary { padding: 11px 22px; height: 42px; }
+    @media (max-width: 720px) { .toolbar { grid-template-columns: 1fr 1fr; } .toolbar .btn-primary { grid-column: 1 / -1; } }
+
+    /* --- Filters --- */
+    .filters { display: flex; gap: 6px; padding: 16px 28px 0; }
     .filters button {
-      border: none; background: none; color: #888; font-size: 13px;
-      cursor: pointer; padding: 4px 10px; border-radius: 6px;
+      border: 1px solid transparent; background: transparent; color: var(--muted);
+      font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 8px; transition: all 0.15s;
     }
-    .filters button.active { background: #eee; color: #333; font-weight: 600; }
+    .filters button:hover { color: var(--text); }
+    .filters button.active { background: var(--green-soft); color: var(--green-hi); border-color: var(--green); font-weight: 600; }
 
-    ul { list-style: none; padding: 12px 24px; }
-    li {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 0; border-bottom: 1px solid #f2f2f2;
+    /* --- Table --- */
+    .table-wrap { padding: 16px 28px 8px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th {
+      text-align: left; font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px; padding: 10px 12px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
     }
-    li input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #764ba2; }
-    li .text { flex: 1; font-size: 15px; color: #333; word-break: break-word; }
-    li.done .text { text-decoration: line-through; color: #aaa; }
-    li .del { border: none; background: none; color: #d33; font-size: 18px; cursor: pointer; opacity: 0.6; }
-    li .del:hover { opacity: 1; }
+    tbody td { padding: 13px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+    tbody tr:nth-child(even) { background: var(--row-alt); }
+    tbody tr:hover { background: rgba(26, 163, 95, 0.06); }
+    tbody tr.done .task { text-decoration: line-through; color: var(--muted); }
 
-    .empty { text-align: center; color: #aaa; padding: 30px 0; font-size: 14px; }
-    .error { color: #d33; background: #fdecea; margin: 16px 24px 0; padding: 10px 14px;
-             border-radius: 8px; font-size: 13px; display: none; }
+    td.col-status { width: 36px; text-align: center; }
+    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--green-hi); }
+    .task { font-weight: 500; word-break: break-word; }
+    .responsible { color: #b9c7d6; white-space: nowrap; }
+    .muted-cell { color: #5d748c; }
+    .deadline { white-space: nowrap; }
+    .deadline.overdue { color: var(--danger); font-weight: 600; }
+    .deadline.soon { color: var(--warning); }
+    .remarks { color: #b9c7d6; word-break: break-word; max-width: 260px; }
+    td.col-actions { width: 40px; text-align: center; }
+    .del { border: none; background: none; color: var(--danger); font-size: 18px; cursor: pointer; opacity: 0.6; transition: opacity 0.15s; }
+    .del:hover { opacity: 1; }
+
+    .empty { text-align: center; color: var(--muted); padding: 36px 0; font-size: 14px; }
+    .error { color: #fecaca; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(248, 113, 113, 0.3);
+             margin: 16px 28px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
 
     footer {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 24px; border-top: 1px solid #eee; font-size: 13px; color: #888;
+      padding: 16px 28px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted);
     }
-    footer button { border: none; background: none; color: #d33; cursor: pointer; font-size: 13px; }
+    footer button { border: none; background: none; color: var(--danger); cursor: pointer; font-size: 13px; }
+    footer button:hover { text-decoration: underline; }
 
     .hidden { display: none !important; }
   </style>
@@ -110,51 +157,80 @@
   <div class="app">
     <header>
       <div>
-        <h1>📝 Yapılacaklar</h1>
+        <h1>✓ Task Manager</h1>
         <div id="who" class="who hidden"></div>
       </div>
-      <button id="signout-btn" class="hidden">Çıkış</button>
+      <button id="signout-btn" class="hidden">Sign out</button>
     </header>
 
     <div id="auth-error" class="error"></div>
     <div id="app-error" class="error"></div>
 
-    <!-- GİRİŞ / KAYIT EKRANI -->
+    <!-- AUTH SCREEN -->
     <section id="auth-view" class="auth">
-      <h2 id="auth-title">Giriş Yap</h2>
-      <p class="sub" id="auth-sub">Görevlerine erişmek için giriş yap.</p>
+      <h2 id="auth-title">Sign in</h2>
+      <p class="sub" id="auth-sub">Sign in to access your tasks.</p>
 
-      <label for="email">E-posta</label>
-      <input id="email" type="email" placeholder="ornek@eposta.com" autocomplete="email" />
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 
-      <label for="password">Şifre</label>
-      <input id="password" type="password" placeholder="En az 6 karakter" autocomplete="current-password" />
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="At least 6 characters" autocomplete="current-password" />
 
-      <button id="auth-btn" class="primary">Giriş Yap</button>
+      <button id="auth-btn" class="btn-primary">Sign in</button>
 
       <div class="toggle" id="auth-toggle">
-        Hesabın yok mu? <a id="toggle-link">Kayıt ol</a>
+        Don't have an account? <a id="toggle-link">Sign up</a>
       </div>
     </section>
 
-    <!-- TODO EKRANI -->
+    <!-- TASK SCREEN -->
     <section id="todo-view" class="hidden">
-      <div class="input-row">
-        <input id="new-task" type="text" placeholder="Yeni görev yaz ve Enter'a bas..." autocomplete="off" />
-        <button id="add-btn">Ekle</button>
+      <div class="toolbar">
+        <div class="field">
+          <label for="new-task">Task</label>
+          <input id="new-task" type="text" placeholder="What needs to be done?" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="new-responsible">Responsible</label>
+          <input id="new-responsible" type="text" placeholder="Owner" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="new-deadline">Deadline</label>
+          <input id="new-deadline" type="date" />
+        </div>
+        <div class="field">
+          <label for="new-remarks">Remarks</label>
+          <input id="new-remarks" type="text" placeholder="Notes" autocomplete="off" />
+        </div>
+        <button id="add-btn" class="btn-primary">Add task</button>
       </div>
 
       <div class="filters">
-        <button data-filter="all" class="active">Tümü</button>
-        <button data-filter="active">Aktif</button>
-        <button data-filter="done">Tamamlanan</button>
+        <button data-filter="all" class="active">All</button>
+        <button data-filter="active">Active</button>
+        <button data-filter="done">Completed</button>
       </div>
 
-      <ul id="list"></ul>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-status">Done</th>
+              <th>Task</th>
+              <th>Responsible</th>
+              <th>Deadline</th>
+              <th>Remarks</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
 
       <footer>
-        <span id="count">0 görev</span>
-        <button id="clear-done">Tamamlananları temizle</button>
+        <span id="count">0 tasks</span>
+        <button id="clear-done">Clear completed</button>
       </footer>
     </section>
   </div>
@@ -162,19 +238,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
-    // Bu iki değer gizli değildir; güvenlik veritabanındaki RLS kurallarıyla sağlanır.
+    // These two values are not secret; security is enforced by the database RLS rules.
     const SUPABASE_URL = "https://mobnfzdtacxplyqijiss.supabase.co";
     const SUPABASE_KEY = "sb_publishable_rsvoFWaKlOYn-g3vo6Pf7Q_xcJxxgxi";
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- DOM kısayolları ---
+    // --- DOM ---
     const authView = document.getElementById("auth-view");
     const todoView = document.getElementById("todo-view");
     const authTitle = document.getElementById("auth-title");
     const authSub = document.getElementById("auth-sub");
     const authBtn = document.getElementById("auth-btn");
     const toggleWrap = document.getElementById("auth-toggle");
-    const toggleLink = document.getElementById("toggle-link");
     const emailEl = document.getElementById("email");
     const passEl = document.getElementById("password");
     const authError = document.getElementById("auth-error");
@@ -183,31 +258,34 @@
     const whoEl = document.getElementById("who");
 
     const listEl = document.getElementById("list");
-    const inputEl = document.getElementById("new-task");
+    const taskEl = document.getElementById("new-task");
+    const respEl = document.getElementById("new-responsible");
+    const deadlineEl = document.getElementById("new-deadline");
+    const remarksEl = document.getElementById("new-remarks");
     const countEl = document.getElementById("count");
     const addBtn = document.getElementById("add-btn");
 
-    let mode = "signin"; // "signin" veya "signup"
+    let mode = "signin";
     let todos = [];
     let filter = "all";
 
-    function showErr(el, msg) { el.textContent = "Hata: " + msg; el.style.display = "block"; }
+    function showErr(el, msg) { el.textContent = "Error: " + msg; el.style.display = "block"; }
     function hideErr(el) { el.style.display = "none"; }
 
-    // --- Kimlik doğrulama (auth) ---
+    // --- Auth ---
     function setMode(m) {
       mode = m;
       hideErr(authError);
       if (m === "signin") {
-        authTitle.textContent = "Giriş Yap";
-        authSub.textContent = "Görevlerine erişmek için giriş yap.";
-        authBtn.textContent = "Giriş Yap";
-        toggleWrap.innerHTML = 'Hesabın yok mu? <a id="toggle-link">Kayıt ol</a>';
+        authTitle.textContent = "Sign in";
+        authSub.textContent = "Sign in to access your tasks.";
+        authBtn.textContent = "Sign in";
+        toggleWrap.innerHTML = 'Don\'t have an account? <a id="toggle-link">Sign up</a>';
       } else {
-        authTitle.textContent = "Kayıt Ol";
-        authSub.textContent = "E-posta ve şifre ile yeni hesap oluştur.";
-        authBtn.textContent = "Kayıt Ol";
-        toggleWrap.innerHTML = 'Zaten hesabın var mı? <a id="toggle-link">Giriş yap</a>';
+        authTitle.textContent = "Sign up";
+        authSub.textContent = "Create a new account with email and password.";
+        authBtn.textContent = "Sign up";
+        toggleWrap.innerHTML = 'Already have an account? <a id="toggle-link">Sign in</a>';
       }
       document.getElementById("toggle-link").addEventListener("click", () =>
         setMode(mode === "signin" ? "signup" : "signin"));
@@ -216,30 +294,27 @@
     async function submitAuth() {
       const email = emailEl.value.trim();
       const password = passEl.value;
-      if (!email || !password) { showErr(authError, "E-posta ve şifre gerekli."); return; }
+      if (!email || !password) { showErr(authError, "Email and password are required."); return; }
       hideErr(authError);
       authBtn.disabled = true;
-      const fn = mode === "signup"
-        ? sb.auth.signUp({ email, password })
-        : sb.auth.signInWithPassword({ email, password });
-      const { error } = await fn;
+      const { error } = mode === "signup"
+        ? await sb.auth.signUp({ email, password })
+        : await sb.auth.signInWithPassword({ email, password });
       authBtn.disabled = false;
       if (error) { showErr(authError, error.message); return; }
-      // Başarılıysa onAuthStateChange devreye girer.
     }
 
     authBtn.addEventListener("click", submitAuth);
     passEl.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
     signoutBtn.addEventListener("click", () => sb.auth.signOut());
 
-    // Giriş durumu değişince ekranı güncelle.
     sb.auth.onAuthStateChange((_event, session) => {
       if (session) {
         authView.classList.add("hidden");
         todoView.classList.remove("hidden");
         signoutBtn.classList.remove("hidden");
         whoEl.classList.remove("hidden");
-        whoEl.textContent = session.user.email;
+        whoEl.textContent = "Signed in as " + session.user.email;
         load();
       } else {
         todoView.classList.add("hidden");
@@ -251,7 +326,15 @@
       }
     });
 
-    // --- Todo işlemleri (RLS sayesinde otomatik olarak yalnızca kendi satırların) ---
+    // --- Confetti on completion ---
+    function celebrate() {
+      if (typeof confetti !== "function") return;
+      confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
+      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 } }), 150);
+      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 } }), 150);
+    }
+
+    // --- Tasks (RLS automatically limits these to your own rows) ---
     async function load() {
       const { data, error } = await sb.from("todos").select("*").order("created_at", { ascending: true });
       if (error) { showErr(appError, error.message); return; }
@@ -260,30 +343,28 @@
       render();
     }
 
-    async function addTodo(text) {
-      text = text.trim();
+    async function addTodo() {
+      const text = taskEl.value.trim();
       if (!text) return;
+      const row = {
+        text,
+        responsible: respEl.value.trim() || null,
+        deadline: deadlineEl.value || null,
+        remarks: remarksEl.value.trim() || null,
+      };
       addBtn.disabled = true;
-      // user_id otomatik dolar (veritabanı varsayılanı auth.uid()).
-      const { error } = await sb.from("todos").insert({ text });
+      const { error } = await sb.from("todos").insert(row);
       addBtn.disabled = false;
       if (error) { showErr(appError, error.message); return; }
+      taskEl.value = ""; respEl.value = ""; deadlineEl.value = ""; remarksEl.value = "";
+      taskEl.focus();
       await load();
-    }
-
-    // Görev tamamlandığında ekrana konfeti patlat.
-    function celebrate() {
-      if (typeof confetti !== "function") return;
-      confetti({ particleCount: 120, spread: 75, origin: { y: 0.6 } });
-      // Yanlardan iki ek patlama, daha şenlikli olsun.
-      setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 } }), 150);
-      setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 } }), 150);
     }
 
     async function toggleTodo(id, done) {
       const { error } = await sb.from("todos").update({ done }).eq("id", id);
       if (error) { showErr(appError, error.message); return; }
-      if (done) celebrate(); // yalnızca tamamlanırken (işareti kaldırırken değil)
+      if (done) celebrate();
       await load();
     }
 
@@ -299,6 +380,18 @@
       await load();
     }
 
+    function formatDeadline(t) {
+      if (!t.deadline) return { text: "—", cls: "muted-cell" };
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const d = new Date(t.deadline + "T00:00:00");
+      const label = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      if (t.done) return { text: label, cls: "" };
+      const diffDays = Math.round((d - today) / 86400000);
+      if (diffDays < 0) return { text: label + " (overdue)", cls: "overdue" };
+      if (diffDays <= 2) return { text: label, cls: "soon" };
+      return { text: label, cls: "" };
+    }
+
     function render() {
       listEl.innerHTML = "";
       const visible = todos.filter((t) => {
@@ -308,41 +401,70 @@
       });
 
       if (visible.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "Burada hiç görev yok.";
-        listEl.appendChild(empty);
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.className = "empty";
+        td.textContent = "No tasks here yet.";
+        tr.appendChild(td);
+        listEl.appendChild(tr);
       }
 
       visible.forEach((t) => {
-        const li = document.createElement("li");
-        if (t.done) li.classList.add("done");
+        const tr = document.createElement("tr");
+        if (t.done) tr.classList.add("done");
 
+        // Status
+        const tdStatus = document.createElement("td");
+        tdStatus.className = "col-status";
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = t.done;
         cb.addEventListener("change", () => toggleTodo(t.id, cb.checked));
+        tdStatus.appendChild(cb);
 
-        const span = document.createElement("span");
-        span.className = "text";
-        span.textContent = t.text;
+        // Task
+        const tdTask = document.createElement("td");
+        tdTask.className = "task";
+        tdTask.textContent = t.text;
 
+        // Responsible
+        const tdResp = document.createElement("td");
+        if (t.responsible) { tdResp.className = "responsible"; tdResp.textContent = t.responsible; }
+        else { tdResp.className = "muted-cell"; tdResp.textContent = "—"; }
+
+        // Deadline
+        const tdDead = document.createElement("td");
+        const dl = formatDeadline(t);
+        tdDead.className = "deadline " + dl.cls;
+        tdDead.textContent = dl.text;
+
+        // Remarks
+        const tdRem = document.createElement("td");
+        if (t.remarks) { tdRem.className = "remarks"; tdRem.textContent = t.remarks; }
+        else { tdRem.className = "muted-cell"; tdRem.textContent = "—"; }
+
+        // Delete
+        const tdDel = document.createElement("td");
+        tdDel.className = "col-actions";
         const del = document.createElement("button");
         del.className = "del";
         del.textContent = "×";
-        del.title = "Sil";
+        del.title = "Delete";
         del.addEventListener("click", () => deleteTodo(t.id));
+        tdDel.appendChild(del);
 
-        li.append(cb, span, del);
-        listEl.appendChild(li);
+        tr.append(tdStatus, tdTask, tdResp, tdDead, tdRem, tdDel);
+        listEl.appendChild(tr);
       });
 
       const remaining = todos.filter((t) => !t.done).length;
-      countEl.textContent = remaining + " görev kaldı";
+      countEl.textContent = remaining + (remaining === 1 ? " task left" : " tasks left");
     }
 
-    addBtn.addEventListener("click", () => { addTodo(inputEl.value); inputEl.value = ""; inputEl.focus(); });
-    inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") { addTodo(inputEl.value); inputEl.value = ""; } });
+    addBtn.addEventListener("click", addTodo);
+    [taskEl, respEl, deadlineEl, remarksEl].forEach((el) =>
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter") addTodo(); }));
     document.getElementById("clear-done").addEventListener("click", clearDone);
     document.querySelectorAll(".filters button").forEach((btn) => {
       btn.addEventListener("click", () => {
