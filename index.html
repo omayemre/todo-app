@@ -122,8 +122,9 @@
       border-bottom: 1px solid var(--border); white-space: nowrap;
     }
     tbody td { padding: 13px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
-    tbody tr:nth-child(even) { background: var(--row-alt); }
-    tbody tr:hover { background: rgba(26, 163, 95, 0.06); }
+    tbody tr.main-row { background: var(--row-alt); }
+    tbody tr.subtask { background: rgba(43, 202, 122, 0.08); }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
     tbody tr.done .task { text-decoration: line-through; color: var(--muted); }
 
     td.col-status { width: 36px; text-align: center; }
@@ -146,15 +147,15 @@
     .del:hover, .add-sub:hover, .edit-btn:hover { opacity: 1; }
 
     /* Sub-tasks: indented under their parent */
-    tbody tr.subtask td.col-status { padding-left: 22px; }
-    .subtask .task { font-weight: 400; font-size: 14px; padding-left: 24px; position: relative; color: #c6d3e0; }
+    tbody tr.subtask td.col-status { padding-left: 36px; border-left: 3px solid var(--green); }
+    .subtask .task { font-weight: 400; font-size: 14px; padding-left: 46px; position: relative; color: #9fb3c8; }
     .subtask .task::before {
-      content: "↳"; position: absolute; left: 6px; color: var(--green-hi); opacity: 0.7;
+      content: "↳"; position: absolute; left: 26px; color: var(--green-hi); opacity: 0.85;
     }
 
     /* Inline sub-task editor row */
     tr.sub-editor-row td { background: var(--panel-2); padding: 14px 12px; }
-    .se-wrap { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-left: 24px; }
+    .se-wrap { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-left: 46px; }
     .se-wrap input { width: auto; padding: 8px 11px; font-size: 13px; }
     .se-wrap input.se-task { flex: 1 1 200px; }
     .se-wrap input.se-resp { flex: 0 1 130px; }
@@ -167,7 +168,7 @@
 
     /* Inline edit mode: each cell becomes an input, columns stay aligned */
     tr.edit-row td { background: var(--panel-2); padding: 9px 10px; }
-    tr.edit-row.subtask td.col-status { padding-left: 22px; }
+    tr.edit-row.subtask td.col-status { padding-left: 36px; border-left: 3px solid var(--green); }
     tr.edit-row input { width: 100%; padding: 8px 10px; font-size: 13px; }
     .save-edit, .cancel-edit {
       border: none; background: none; cursor: pointer; opacity: 0.8;
@@ -467,7 +468,7 @@
     function buildRow(t, isSub) {
       const tr = document.createElement("tr");
       if (t.done) tr.classList.add("done");
-      if (isSub) tr.classList.add("subtask");
+      tr.classList.add(isSub ? "subtask" : "main-row");
 
       const tdStatus = document.createElement("td");
       tdStatus.className = "col-status";
