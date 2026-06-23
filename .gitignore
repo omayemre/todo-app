@@ -1,0 +1,6 @@
+# Yerel araç/editor dosyaları
+.claude/
+
+# Supabase CLI geçici dosyaları
+supabase/.temp/
+supabase/.branches/
