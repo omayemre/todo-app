@@ -6,34 +6,36 @@
   <title>Follow Up / To Do list</title>
   <style>
     :root {
-      --navy:        #0a1b32;
-      --navy-2:      #060f1d;
-      --green-bg:    #08201a;
-      --panel:       #102742;
-      --panel-2:     #0b1d33;
-      --row-alt:     #0a1a2f;
-      --border:      rgba(160, 178, 196, 0.22);
-      --border-soft: rgba(160, 178, 196, 0.12);
-      --green:       #1f8a4c;
-      --green-hi:    #2bca7a;
-      --green-soft:  rgba(43, 202, 122, 0.16);
-      --text:        #f2f7fc;
-      --muted:       #9bb0c6;
-      --danger:      #f87171;
-      --warning:     #fbbf24;
+      --bg-1:        #eef4fa;   /* light blue */
+      --bg-2:        #eef7f1;   /* light green */
+      --panel:       #ffffff;
+      --panel-2:     #f5f8fb;   /* subtle tint for inputs / editor rows */
+      --row-alt:     #ffffff;   /* main task rows */
+      --sub-row:     #f0f8f3;   /* sub-task rows (light green) */
+      --border:      #e4eaf1;
+      --border-soft: #eef2f7;
+      --green:       #46a784;   /* primary green accent */
+      --green-hi:    #3a8f70;   /* darker, for hover */
+      --green-soft:  #e7f5ee;   /* light green tint */
+      --blue:        #5b9bd5;   /* light blue accent */
+      --blue-soft:   #eef4fb;
+      --text:        #233040;   /* dark slate */
+      --muted:       #7c8b9b;
+      --danger:      #d6453f;
+      --warning:     #c2700a;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 55%, var(--green-bg) 100%);
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
       min-height: 100vh;
       color: var(--text);
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      padding: 40px 16px;
+      padding: 48px 16px;
     }
 
     .app {
@@ -42,41 +44,41 @@
       max-width: 960px;
       border: 1px solid var(--border);
       border-radius: 14px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 40px rgba(31, 58, 92, 0.08);
       overflow: hidden;
     }
 
     header {
       padding: 22px 28px;
-      background: linear-gradient(90deg, #0e2a47 0%, #0f3d2e 100%);
+      background: var(--panel);
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.3px; }
+    header h1 { font-size: 19px; font-weight: 600; letter-spacing: 0.2px; color: var(--text); }
     header .who { font-size: 12px; color: var(--muted); margin-top: 3px; }
     #signout-btn {
-      border: 1px solid rgba(255, 255, 255, 0.25); background: transparent; color: var(--text);
-      padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background 0.15s;
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.15s;
     }
-    #signout-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    #signout-btn:hover { background: var(--panel-2); color: var(--text); }
 
     /* --- Auth screen --- */
-    .auth { padding: 34px 28px; max-width: 420px; margin: 0 auto; }
-    .auth h2 { font-size: 19px; margin-bottom: 6px; }
-    .auth p.sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-    .auth label { display: block; font-size: 12px; color: var(--muted);
-                  text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 6px; }
+    .auth { padding: 36px 28px; max-width: 400px; margin: 0 auto; }
+    .auth h2 { font-size: 19px; margin-bottom: 6px; font-weight: 600; }
+    .auth p.sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .auth label { display: block; font-size: 11px; color: var(--muted);
+                  text-transform: uppercase; letter-spacing: 0.6px; margin: 14px 0 6px; }
 
     input, select {
-      width: 100%; padding: 11px 13px; background: var(--panel-2); color: var(--text);
+      width: 100%; padding: 11px 13px; background: var(--panel); color: var(--text);
       border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none;
       transition: border-color 0.15s;
     }
-    input::placeholder { color: #5d748c; }
-    input:focus, select:focus { border-color: var(--green-hi); }
-    input[type="date"] { color-scheme: dark; }
+    input::placeholder { color: #aab6c2; }
+    input:focus, select:focus { border-color: var(--green); }
+    input[type="date"] { color-scheme: light; }
 
     .btn-primary {
       border: none; background: var(--green); color: #fff; font-weight: 600;
@@ -85,9 +87,9 @@
     .btn-primary:hover { background: var(--green-hi); }
     .btn-primary:disabled { opacity: 0.5; cursor: default; }
 
-    .auth .btn-primary { width: 100%; margin-top: 22px; padding: 12px; }
+    .auth .btn-primary { width: 100%; margin-top: 24px; padding: 12px; }
     .auth .toggle { margin-top: 18px; text-align: center; font-size: 13px; color: var(--muted); }
-    .auth .toggle a { color: var(--green-hi); cursor: pointer; }
+    .auth .toggle a { color: var(--green); cursor: pointer; font-weight: 500; }
     .auth .toggle a:hover { text-decoration: underline; }
 
     /* --- Add task toolbar --- */
@@ -105,16 +107,16 @@
     @media (max-width: 720px) { .toolbar { grid-template-columns: 1fr 1fr; } .toolbar .btn-primary { grid-column: 1 / -1; } }
 
     /* --- Filters --- */
-    .filters { display: flex; gap: 6px; padding: 16px 28px 0; }
+    .filters { display: flex; gap: 6px; padding: 18px 28px 2px; }
     .filters button {
       border: 1px solid transparent; background: transparent; color: var(--muted);
       font-size: 13px; cursor: pointer; padding: 6px 14px; border-radius: 8px; transition: all 0.15s;
     }
-    .filters button:hover { color: var(--text); }
-    .filters button.active { background: var(--green-soft); color: var(--green-hi); border-color: var(--green); font-weight: 600; }
+    .filters button:hover { color: var(--text); background: var(--panel-2); }
+    .filters button.active { background: var(--green-soft); color: var(--green-hi); font-weight: 600; }
 
     /* --- Table --- */
-    .table-wrap { padding: 16px 28px 8px; overflow-x: auto; }
+    .table-wrap { padding: 14px 28px 8px; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
     thead th {
       text-align: left; font-size: 11px; font-weight: 600; color: var(--muted);
@@ -123,34 +125,34 @@
     }
     tbody td { padding: 13px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
     tbody tr.main-row { background: var(--row-alt); }
-    tbody tr.subtask { background: rgba(43, 202, 122, 0.08); }
-    tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
+    tbody tr.subtask { background: var(--sub-row); }
+    tbody tr:hover { background: var(--blue-soft); }
     tbody tr.done .task { text-decoration: line-through; color: var(--muted); }
 
     td.col-status { width: 36px; text-align: center; }
-    input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--green-hi); }
-    .task { font-weight: 700; font-size: 15px; color: #ffffff; word-break: break-word; }
-    .responsible { color: #b9c7d6; white-space: nowrap; }
-    .muted-cell { color: #5d748c; }
-    .deadline { white-space: nowrap; }
+    input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; accent-color: var(--green); }
+    .task { font-weight: 700; font-size: 15px; color: var(--text); word-break: break-word; }
+    .responsible { color: #50617a; white-space: nowrap; }
+    .muted-cell { color: #aab6c2; }
+    .deadline { white-space: nowrap; color: #50617a; }
     .deadline.overdue { color: var(--danger); font-weight: 600; }
     .deadline.soon { color: var(--warning); }
-    .remarks { color: #b9c7d6; word-break: break-word; max-width: 260px; }
+    .remarks { color: #50617a; word-break: break-word; max-width: 260px; }
     td.col-actions { width: 108px; text-align: right; white-space: nowrap; }
     .del, .add-sub, .edit-btn {
-      border: none; background: none; cursor: pointer; opacity: 0.65;
+      border: none; background: none; cursor: pointer; opacity: 0.7;
       transition: opacity 0.15s; padding: 2px 4px;
     }
     .del { color: var(--danger); font-size: 18px; }
-    .add-sub { color: var(--green-hi); font-size: 17px; font-weight: 700; }
-    .edit-btn { color: #7aa2c9; font-size: 15px; }
+    .add-sub { color: var(--green); font-size: 17px; font-weight: 700; }
+    .edit-btn { color: var(--blue); font-size: 15px; }
     .del:hover, .add-sub:hover, .edit-btn:hover { opacity: 1; }
 
     /* Sub-tasks: indented under their parent */
     tbody tr.subtask td.col-status { padding-left: 36px; border-left: 3px solid var(--green); }
-    .subtask .task { font-weight: 400; font-size: 14px; padding-left: 46px; position: relative; color: #9fb3c8; }
+    .subtask .task { font-weight: 400; font-size: 14px; padding-left: 46px; position: relative; color: #64758a; }
     .subtask .task::before {
-      content: "↳"; position: absolute; left: 26px; color: var(--green-hi); opacity: 0.85;
+      content: "↳"; position: absolute; left: 26px; color: var(--green); opacity: 0.85;
     }
 
     /* Inline sub-task editor row */
@@ -174,12 +176,12 @@
       border: none; background: none; cursor: pointer; opacity: 0.8;
       transition: opacity 0.15s; padding: 2px 5px; font-size: 17px;
     }
-    .save-edit { color: var(--green-hi); font-weight: 700; }
+    .save-edit { color: var(--green); font-weight: 700; }
     .cancel-edit { color: var(--muted); }
     .save-edit:hover, .cancel-edit:hover { opacity: 1; }
 
-    .empty { text-align: center; color: var(--muted); padding: 36px 0; font-size: 14px; }
-    .error { color: #fecaca; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(248, 113, 113, 0.3);
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14px; }
+    .error { color: #b3322c; background: #fdeceb; border: 1px solid #f6d2d0;
              margin: 16px 28px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
 
     footer {
