@@ -135,14 +135,15 @@
     .deadline.overdue { color: var(--danger); font-weight: 600; }
     .deadline.soon { color: var(--warning); }
     .remarks { color: #b9c7d6; word-break: break-word; max-width: 260px; }
-    td.col-actions { width: 78px; text-align: right; white-space: nowrap; }
-    .del, .add-sub {
+    td.col-actions { width: 108px; text-align: right; white-space: nowrap; }
+    .del, .add-sub, .edit-btn {
       border: none; background: none; cursor: pointer; opacity: 0.65;
       transition: opacity 0.15s; padding: 2px 4px;
     }
     .del { color: var(--danger); font-size: 18px; }
     .add-sub { color: var(--green-hi); font-size: 17px; font-weight: 700; }
-    .del:hover, .add-sub:hover { opacity: 1; }
+    .edit-btn { color: #7aa2c9; font-size: 15px; }
+    .del:hover, .add-sub:hover, .edit-btn:hover { opacity: 1; }
 
     /* Sub-tasks: indented under their parent */
     tbody tr.subtask td.col-status { padding-left: 22px; }
@@ -163,6 +164,18 @@
     .se-add:hover { background: var(--green-hi); }
     .se-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
     .se-cancel:hover { color: var(--text); }
+
+    /* Inline edit mode: each cell becomes an input, columns stay aligned */
+    tr.edit-row td { background: var(--panel-2); padding: 9px 10px; }
+    tr.edit-row.subtask td.col-status { padding-left: 22px; }
+    tr.edit-row input { width: 100%; padding: 8px 10px; font-size: 13px; }
+    .save-edit, .cancel-edit {
+      border: none; background: none; cursor: pointer; opacity: 0.8;
+      transition: opacity 0.15s; padding: 2px 5px; font-size: 17px;
+    }
+    .save-edit { color: var(--green-hi); font-weight: 700; }
+    .cancel-edit { color: var(--muted); }
+    .save-edit:hover, .cancel-edit:hover { opacity: 1; }
 
     .empty { text-align: center; color: var(--muted); padding: 36px 0; font-size: 14px; }
     .error { color: #fecaca; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(248, 113, 113, 0.3);
@@ -294,6 +307,7 @@
     let todos = [];
     let filter = "all";
     let addingSubFor = null; // id of the parent row whose sub-task editor is open
+    let editingId = null;    // id of the task currently being edited inline
 
     function showErr(el, msg) { el.textContent = "Error: " + msg; el.style.display = "block"; }
     function hideErr(el) { el.style.display = "none"; }
@@ -422,6 +436,21 @@
       await load();
     }
 
+    async function saveEdit(id, fields) {
+      const text = fields.task.value.trim();
+      if (!text) { fields.task.focus(); return; }
+      const patch = {
+        text,
+        responsible: fields.resp.value.trim() || null,
+        deadline: fields.deadline.value || null,
+        remarks: fields.remarks.value.trim() || null,
+      };
+      const { error } = await sb.from("todos").update(patch).eq("id", id);
+      if (error) { showErr(appError, error.message); return; }
+      editingId = null;
+      await load();
+    }
+
     function formatDeadline(t) {
       if (!t.deadline) return { text: "—", cls: "muted-cell" };
       const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -478,6 +507,17 @@
         });
         tdAct.appendChild(addSub);
       }
+      const edit = document.createElement("button");
+      edit.className = "edit-btn";
+      edit.textContent = "✎";
+      edit.title = "Edit";
+      edit.addEventListener("click", () => {
+        editingId = t.id;
+        addingSubFor = null;
+        render();
+      });
+      tdAct.appendChild(edit);
+
       const del = document.createElement("button");
       del.className = "del";
       del.textContent = "×";
@@ -528,6 +568,55 @@
       return tr;
     }
 
+    // An existing task rendered as editable inputs, keeping column alignment.
+    function buildEditRow(t, isSub) {
+      const tr = document.createElement("tr");
+      tr.className = "edit-row" + (isSub ? " subtask" : "");
+
+      const tdStatus = document.createElement("td");
+      tdStatus.className = "col-status";
+
+      const tdTask = document.createElement("td");
+      const task = document.createElement("input");
+      task.type = "text"; task.value = t.text; task.id = "edit-task-input";
+      tdTask.appendChild(task);
+
+      const tdResp = document.createElement("td");
+      const resp = document.createElement("input");
+      resp.type = "text"; resp.placeholder = "Responsible"; resp.value = t.responsible || "";
+      tdResp.appendChild(resp);
+
+      const tdDead = document.createElement("td");
+      const deadline = document.createElement("input");
+      deadline.type = "date"; deadline.value = t.deadline || "";
+      tdDead.appendChild(deadline);
+
+      const tdRem = document.createElement("td");
+      const remarks = document.createElement("input");
+      remarks.type = "text"; remarks.placeholder = "Remarks"; remarks.value = t.remarks || "";
+      tdRem.appendChild(remarks);
+
+      const fields = { task, resp, deadline, remarks };
+      const tdAct = document.createElement("td");
+      tdAct.className = "col-actions";
+      const saveB = document.createElement("button");
+      saveB.className = "save-edit"; saveB.textContent = "✓"; saveB.title = "Save";
+      saveB.addEventListener("click", () => saveEdit(t.id, fields));
+      const cancelB = document.createElement("button");
+      cancelB.className = "cancel-edit"; cancelB.textContent = "×"; cancelB.title = "Cancel";
+      cancelB.addEventListener("click", () => { editingId = null; render(); });
+      tdAct.append(saveB, cancelB);
+
+      [task, resp, deadline, remarks].forEach((el) =>
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saveEdit(t.id, fields);
+          if (e.key === "Escape") { editingId = null; render(); }
+        }));
+
+      tr.append(tdStatus, tdTask, tdResp, tdDead, tdRem, tdAct);
+      return tr;
+    }
+
     function render() {
       listEl.innerHTML = "";
       const matches = (t) =>
@@ -542,9 +631,11 @@
         // Keep a parent visible if it matches, has matching sub-tasks, or its editor is open.
         if (!matches(parent) && visKids.length === 0 && !editorOpen) return;
 
-        listEl.appendChild(buildRow(parent, false));
+        const rowFor = (task, sub) =>
+          editingId === task.id ? buildEditRow(task, sub) : buildRow(task, sub);
+        listEl.appendChild(rowFor(parent, false));
         shown++;
-        visKids.forEach((k) => { listEl.appendChild(buildRow(k, true)); shown++; });
+        visKids.forEach((k) => { listEl.appendChild(rowFor(k, true)); shown++; });
         if (editorOpen) listEl.appendChild(buildSubEditor(parent.id));
       });
 
@@ -561,10 +652,13 @@
       const remaining = todos.filter((t) => !t.done).length;
       countEl.textContent = remaining + (remaining === 1 ? " task left" : " tasks left");
 
-      // Focus the sub-task input as soon as its editor opens.
+      // Focus the relevant input as soon as an editor opens.
       if (addingSubFor !== null) {
         const el = document.getElementById("se-task-input");
         if (el) el.focus();
+      } else if (editingId !== null) {
+        const el = document.getElementById("edit-task-input");
+        if (el) { el.focus(); el.select(); }
       }
     }
 
