@@ -135,9 +135,34 @@
     .deadline.overdue { color: var(--danger); font-weight: 600; }
     .deadline.soon { color: var(--warning); }
     .remarks { color: #b9c7d6; word-break: break-word; max-width: 260px; }
-    td.col-actions { width: 40px; text-align: center; }
-    .del { border: none; background: none; color: var(--danger); font-size: 18px; cursor: pointer; opacity: 0.6; transition: opacity 0.15s; }
-    .del:hover { opacity: 1; }
+    td.col-actions { width: 78px; text-align: right; white-space: nowrap; }
+    .del, .add-sub {
+      border: none; background: none; cursor: pointer; opacity: 0.65;
+      transition: opacity 0.15s; padding: 2px 4px;
+    }
+    .del { color: var(--danger); font-size: 18px; }
+    .add-sub { color: var(--green-hi); font-size: 17px; font-weight: 700; }
+    .del:hover, .add-sub:hover { opacity: 1; }
+
+    /* Sub-tasks: indented under their parent */
+    tbody tr.subtask td.col-status { padding-left: 22px; }
+    .subtask .task { font-weight: 400; padding-left: 24px; position: relative; color: #c6d3e0; }
+    .subtask .task::before {
+      content: "↳"; position: absolute; left: 6px; color: var(--green-hi); opacity: 0.7;
+    }
+
+    /* Inline sub-task editor row */
+    tr.sub-editor-row td { background: var(--panel-2); padding: 14px 12px; }
+    .se-wrap { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-left: 24px; }
+    .se-wrap input { width: auto; padding: 8px 11px; font-size: 13px; }
+    .se-wrap input.se-task { flex: 1 1 200px; }
+    .se-wrap input.se-resp { flex: 0 1 130px; }
+    .se-wrap input.se-rem { flex: 1 1 160px; }
+    .se-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .se-add { border: none; background: var(--green); color: #fff; font-weight: 600; }
+    .se-add:hover { background: var(--green-hi); }
+    .se-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .se-cancel:hover { color: var(--text); }
 
     .empty { text-align: center; color: var(--muted); padding: 36px 0; font-size: 14px; }
     .error { color: #fecaca; background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(248, 113, 113, 0.3);
@@ -268,6 +293,7 @@
     let mode = "signin";
     let todos = [];
     let filter = "all";
+    let addingSubFor = null; // id of the parent row whose sub-task editor is open
 
     function showErr(el, msg) { el.textContent = "Error: " + msg; el.style.display = "block"; }
     function hideErr(el) { el.style.display = "none"; }
@@ -380,6 +406,22 @@
       await load();
     }
 
+    async function addSubtask(parentId, fields) {
+      const text = fields.task.value.trim();
+      if (!text) { fields.task.focus(); return; }
+      const row = {
+        text,
+        parent_id: parentId,
+        responsible: fields.resp.value.trim() || null,
+        deadline: fields.deadline.value || null,
+        remarks: fields.remarks.value.trim() || null,
+      };
+      const { error } = await sb.from("todos").insert(row);
+      if (error) { showErr(appError, error.message); return; }
+      addingSubFor = null;
+      await load();
+    }
+
     function formatDeadline(t) {
       if (!t.deadline) return { text: "—", cls: "muted-cell" };
       const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -392,15 +434,121 @@
       return { text: label, cls: "" };
     }
 
+    // Build one table row for a task (isSub = rendered as an indented sub-task).
+    function buildRow(t, isSub) {
+      const tr = document.createElement("tr");
+      if (t.done) tr.classList.add("done");
+      if (isSub) tr.classList.add("subtask");
+
+      const tdStatus = document.createElement("td");
+      tdStatus.className = "col-status";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = t.done;
+      cb.addEventListener("change", () => toggleTodo(t.id, cb.checked));
+      tdStatus.appendChild(cb);
+
+      const tdTask = document.createElement("td");
+      tdTask.className = "task";
+      tdTask.textContent = t.text;
+
+      const tdResp = document.createElement("td");
+      if (t.responsible) { tdResp.className = "responsible"; tdResp.textContent = t.responsible; }
+      else { tdResp.className = "muted-cell"; tdResp.textContent = "—"; }
+
+      const tdDead = document.createElement("td");
+      const dl = formatDeadline(t);
+      tdDead.className = "deadline " + dl.cls;
+      tdDead.textContent = dl.text;
+
+      const tdRem = document.createElement("td");
+      if (t.remarks) { tdRem.className = "remarks"; tdRem.textContent = t.remarks; }
+      else { tdRem.className = "muted-cell"; tdRem.textContent = "—"; }
+
+      const tdAct = document.createElement("td");
+      tdAct.className = "col-actions";
+      if (!isSub) {
+        const addSub = document.createElement("button");
+        addSub.className = "add-sub";
+        addSub.textContent = "＋";
+        addSub.title = "Add sub-task";
+        addSub.addEventListener("click", () => {
+          addingSubFor = (addingSubFor === t.id) ? null : t.id;
+          render();
+        });
+        tdAct.appendChild(addSub);
+      }
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "×";
+      del.title = "Delete";
+      del.addEventListener("click", () => {
+        const kids = todos.filter((x) => x.parent_id === t.id);
+        if (kids.length && !confirm("Delete this task and its " + kids.length + " sub-task(s)?")) return;
+        deleteTodo(t.id);
+      });
+      tdAct.appendChild(del);
+
+      tr.append(tdStatus, tdTask, tdResp, tdDead, tdRem, tdAct);
+      return tr;
+    }
+
+    // Inline editor row for adding a sub-task under a given parent.
+    function buildSubEditor(parentId) {
+      const tr = document.createElement("tr");
+      tr.className = "sub-editor-row";
+      const td = document.createElement("td");
+      td.colSpan = 6;
+      const wrap = document.createElement("div");
+      wrap.className = "se-wrap";
+
+      const task = document.createElement("input");
+      task.className = "se-task"; task.type = "text"; task.placeholder = "Sub-task"; task.id = "se-task-input";
+      const resp = document.createElement("input");
+      resp.className = "se-resp"; resp.type = "text"; resp.placeholder = "Responsible";
+      const deadline = document.createElement("input");
+      deadline.className = "se-deadline"; deadline.type = "date";
+      const remarks = document.createElement("input");
+      remarks.className = "se-rem"; remarks.type = "text"; remarks.placeholder = "Remarks";
+
+      const fields = { task, resp, deadline, remarks };
+      const addB = document.createElement("button");
+      addB.className = "se-btn se-add"; addB.textContent = "Add";
+      addB.addEventListener("click", () => addSubtask(parentId, fields));
+      const cancelB = document.createElement("button");
+      cancelB.className = "se-btn se-cancel"; cancelB.textContent = "Cancel";
+      cancelB.addEventListener("click", () => { addingSubFor = null; render(); });
+
+      [task, resp, deadline, remarks].forEach((el) =>
+        el.addEventListener("keydown", (e) => { if (e.key === "Enter") addSubtask(parentId, fields); }));
+
+      wrap.append(task, resp, deadline, remarks, addB, cancelB);
+      td.appendChild(wrap);
+      tr.appendChild(td);
+      return tr;
+    }
+
     function render() {
       listEl.innerHTML = "";
-      const visible = todos.filter((t) => {
-        if (filter === "active") return !t.done;
-        if (filter === "done") return t.done;
-        return true;
+      const matches = (t) =>
+        filter === "all" ? true : filter === "active" ? !t.done : t.done;
+      const tops = todos.filter((t) => !t.parent_id);
+      const childrenOf = (id) => todos.filter((t) => t.parent_id === id);
+
+      let shown = 0;
+      tops.forEach((parent) => {
+        const visKids = childrenOf(parent.id).filter(matches);
+        const editorOpen = addingSubFor === parent.id;
+        // Keep a parent visible if it matches, has matching sub-tasks, or its editor is open.
+        if (!matches(parent) && visKids.length === 0 && !editorOpen) return;
+
+        listEl.appendChild(buildRow(parent, false));
+        shown++;
+        visKids.forEach((k) => { listEl.appendChild(buildRow(k, true)); shown++; });
+        if (editorOpen) listEl.appendChild(buildSubEditor(parent.id));
       });
 
-      if (visible.length === 0) {
+      if (shown === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
         td.colSpan = 6;
@@ -410,56 +558,14 @@
         listEl.appendChild(tr);
       }
 
-      visible.forEach((t) => {
-        const tr = document.createElement("tr");
-        if (t.done) tr.classList.add("done");
-
-        // Status
-        const tdStatus = document.createElement("td");
-        tdStatus.className = "col-status";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = t.done;
-        cb.addEventListener("change", () => toggleTodo(t.id, cb.checked));
-        tdStatus.appendChild(cb);
-
-        // Task
-        const tdTask = document.createElement("td");
-        tdTask.className = "task";
-        tdTask.textContent = t.text;
-
-        // Responsible
-        const tdResp = document.createElement("td");
-        if (t.responsible) { tdResp.className = "responsible"; tdResp.textContent = t.responsible; }
-        else { tdResp.className = "muted-cell"; tdResp.textContent = "—"; }
-
-        // Deadline
-        const tdDead = document.createElement("td");
-        const dl = formatDeadline(t);
-        tdDead.className = "deadline " + dl.cls;
-        tdDead.textContent = dl.text;
-
-        // Remarks
-        const tdRem = document.createElement("td");
-        if (t.remarks) { tdRem.className = "remarks"; tdRem.textContent = t.remarks; }
-        else { tdRem.className = "muted-cell"; tdRem.textContent = "—"; }
-
-        // Delete
-        const tdDel = document.createElement("td");
-        tdDel.className = "col-actions";
-        const del = document.createElement("button");
-        del.className = "del";
-        del.textContent = "×";
-        del.title = "Delete";
-        del.addEventListener("click", () => deleteTodo(t.id));
-        tdDel.appendChild(del);
-
-        tr.append(tdStatus, tdTask, tdResp, tdDead, tdRem, tdDel);
-        listEl.appendChild(tr);
-      });
-
       const remaining = todos.filter((t) => !t.done).length;
       countEl.textContent = remaining + (remaining === 1 ? " task left" : " tasks left");
+
+      // Focus the sub-task input as soon as its editor opens.
+      if (addingSubFor !== null) {
+        const el = document.getElementById("se-task-input");
+        if (el) el.focus();
+      }
     }
 
     addBtn.addEventListener("click", addTodo);
