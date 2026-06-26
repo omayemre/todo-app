@@ -191,6 +191,26 @@
     footer button { border: none; background: none; color: var(--danger); cursor: pointer; font-size: 13px; }
     footer button:hover { text-decoration: underline; }
 
+    nav {
+      display: flex;
+      gap: 4px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    nav a {
+      display: inline-block;
+      padding: 13px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -203,6 +223,11 @@
       </div>
       <button id="signout-btn" class="hidden">Sign out</button>
     </header>
+
+    <nav id="main-nav" class="hidden">
+      <a href="index.html" class="active">Tasks</a>
+      <a href="profile.html">Profile</a>
+    </nav>
 
     <div id="auth-error" class="error"></div>
     <div id="app-error" class="error"></div>
@@ -297,6 +322,7 @@
     const appError = document.getElementById("app-error");
     const signoutBtn = document.getElementById("signout-btn");
     const whoEl = document.getElementById("who");
+    const mainNav = document.getElementById("main-nav");
 
     const listEl = document.getElementById("list");
     const taskEl = document.getElementById("new-task");
@@ -357,12 +383,14 @@
         todoView.classList.remove("hidden");
         signoutBtn.classList.remove("hidden");
         whoEl.classList.remove("hidden");
+        mainNav.classList.remove("hidden");
         whoEl.textContent = "Signed in as " + session.user.email;
         load();
       } else {
         todoView.classList.add("hidden");
         signoutBtn.classList.add("hidden");
         whoEl.classList.add("hidden");
+        mainNav.classList.add("hidden");
         authView.classList.remove("hidden");
         emailEl.value = ""; passEl.value = "";
         todos = [];

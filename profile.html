@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – Follow Up / To Do list</title>
+  <style>
+    :root {
+      --bg-1:        #eef4fa;
+      --bg-2:        #eef7f1;
+      --panel:       #ffffff;
+      --panel-2:     #f5f8fb;
+      --border:      #e4eaf1;
+      --green:       #46a784;
+      --green-hi:    #3a8f70;
+      --green-soft:  #e7f5ee;
+      --blue:        #5b9bd5;
+      --blue-soft:   #eef4fb;
+      --text:        #233040;
+      --muted:       #7c8b9b;
+      --danger:      #d6453f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      min-height: 100vh;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 16px;
+    }
+
+    .app {
+      background: var(--panel);
+      width: 100%;
+      max-width: 960px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 10px 40px rgba(31, 58, 92, 0.08);
+      overflow: hidden;
+    }
+
+    /* --- Header --- */
+    header {
+      padding: 22px 28px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 19px; font-weight: 600; letter-spacing: 0.2px; color: var(--text); }
+    #signout-btn {
+      border: 1px solid var(--border); background: transparent; color: var(--muted);
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.15s;
+    }
+    #signout-btn:hover { background: var(--panel-2); color: var(--text); }
+
+    /* --- Nav --- */
+    nav {
+      display: flex;
+      gap: 4px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    nav a {
+      display: inline-block;
+      padding: 13px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    nav a:hover { color: var(--text); }
+    nav a.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
+
+    /* --- Profile content --- */
+    .profile-wrap {
+      padding: 36px 28px;
+      max-width: 480px;
+    }
+
+    .profile-wrap h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+
+    .info-block {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      display: grid;
+      gap: 12px;
+    }
+    .info-row { display: flex; flex-direction: column; gap: 3px; }
+    .info-row .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+    .info-row .value { font-size: 14px; color: var(--text); }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 13px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 18px;
+    }
+    input[type="text"]:focus { border-color: var(--green); }
+    input::placeholder { color: #aab6c2; }
+
+    .btn-primary {
+      border: none;
+      background: var(--green);
+      color: #fff;
+      font-weight: 600;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 11px 24px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--green-hi); }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    .toast {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .toast.success {
+      background: var(--green-soft);
+      color: var(--green-hi);
+      border: 1px solid #b8dece;
+    }
+    .toast.error {
+      background: #fdeceb;
+      color: #b3322c;
+      border: 1px solid #f6d2d0;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>✓ Follow Up / To Do list</h1>
+      <button id="signout-btn">Sign out</button>
+    </header>
+
+    <nav>
+      <a href="index.html">Tasks</a>
+      <a href="profile.html" class="active">Profile</a>
+    </nav>
+
+    <div class="profile-wrap">
+      <h2>Your Profile</h2>
+
+      <div class="info-block">
+        <div class="info-row">
+          <span class="label">Email</span>
+          <span class="value" id="user-email">—</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Member since</span>
+          <span class="value" id="user-joined">—</span>
+        </div>
+      </div>
+
+      <label class="field-label" for="display-name">Display name</label>
+      <input id="display-name" type="text" placeholder="Your name" autocomplete="off" />
+
+      <button id="save-btn" class="btn-primary">Save</button>
+
+      <div id="toast" class="toast"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://mobnfzdtacxplyqijiss.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_rsvoFWaKlOYn-g3vo6Pf7Q_xcJxxgxi";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const emailEl   = document.getElementById("user-email");
+    const joinedEl  = document.getElementById("user-joined");
+    const nameEl    = document.getElementById("display-name");
+    const saveBtn   = document.getElementById("save-btn");
+    const toast     = document.getElementById("toast");
+    const signoutBtn = document.getElementById("signout-btn");
+
+    function showToast(msg, type) {
+      toast.textContent = msg;
+      toast.className = "toast " + type;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
+
+    async function loadProfile(user) {
+      emailEl.textContent = user.email;
+      const joined = new Date(user.created_at);
+      joinedEl.textContent = joined.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+
+      const { data } = await sb.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
+      if (data?.display_name) nameEl.value = data.display_name;
+    }
+
+    async function saveProfile(userId) {
+      const display_name = nameEl.value.trim() || null;
+      saveBtn.disabled = true;
+      const { error } = await sb.from("profiles").upsert({ user_id: userId, display_name, updated_at: new Date().toISOString() });
+      saveBtn.disabled = false;
+      if (error) { showToast("Error: " + error.message, "error"); return; }
+      showToast("Profile saved.", "success");
+    }
+
+    signoutBtn.addEventListener("click", () => sb.auth.signOut());
+
+    sb.auth.onAuthStateChange(async (_event, session) => {
+      if (!session) {
+        window.location.href = "index.html";
+        return;
+      }
+      await loadProfile(session.user);
+      saveBtn.addEventListener("click", () => saveProfile(session.user.id));
+      nameEl.addEventListener("keydown", (e) => { if (e.key === "Enter") saveProfile(session.user.id); });
+    });
+  </script>
+</body>
+</html>
