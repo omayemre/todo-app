@@ -211,6 +211,56 @@
     nav a:hover { color: var(--text); }
     nav a.active { color: var(--green); border-bottom-color: var(--green); font-weight: 600; }
 
+    /* --- Share modal --- */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(20, 35, 55, 0.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 16px;
+    }
+    .modal {
+      background: var(--panel); border-radius: 14px; width: 100%; max-width: 440px;
+      border: 1px solid var(--border); box-shadow: 0 16px 48px rgba(20,35,55,0.16);
+    }
+    .modal-header {
+      padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 600; }
+    .modal-header .modal-task-name { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .modal-close {
+      border: none; background: none; font-size: 20px; color: var(--muted);
+      cursor: pointer; line-height: 1; padding: 2px 6px; border-radius: 6px;
+    }
+    .modal-close:hover { background: var(--panel-2); color: var(--text); }
+    .modal-body { padding: 20px 24px; }
+    .share-list { margin-bottom: 18px; display: flex; flex-direction: column; gap: 8px; }
+    .share-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; background: var(--panel-2); border-radius: 8px;
+      border: 1px solid var(--border); font-size: 13px;
+    }
+    .share-item .share-email { color: var(--text); font-weight: 500; }
+    .share-item .share-level {
+      font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    }
+    .share-level.read  { background: var(--blue-soft);  color: var(--blue); }
+    .share-level.edit  { background: var(--green-soft); color: var(--green-hi); }
+    .share-remove {
+      border: none; background: none; color: var(--danger); cursor: pointer;
+      font-size: 16px; opacity: 0.7; padding: 0 2px;
+    }
+    .share-remove:hover { opacity: 1; }
+    .share-add { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+    .share-add input { flex: 1 1 180px; margin-bottom: 0; }
+    .share-add select { flex: 0 0 90px; margin-bottom: 0; }
+    .share-add .btn-primary { white-space: nowrap; padding: 11px 16px; }
+    .share-empty { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+    .share-badge {
+      display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px;
+      border-radius: 8px; background: var(--blue-soft); color: var(--blue);
+      vertical-align: middle; margin-left: 6px; letter-spacing: 0.3px;
+    }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -247,6 +297,18 @@
 
       <div class="toggle" id="auth-toggle">
         Don't have an account? <a id="toggle-link">Sign up</a>
+      </div>
+
+      <div class="toggle" id="forgot-toggle" style="margin-top: 8px;">
+        <a id="forgot-link">Forgot password?</a>
+      </div>
+
+      <div id="forgot-section" class="hidden" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Enter your email and we'll send you a reset link.</p>
+        <label for="reset-email">Email</label>
+        <input id="reset-email" type="email" placeholder="you@example.com" autocomplete="email" />
+        <button id="reset-btn" class="btn-primary" style="width: 100%; margin-top: 12px; padding: 12px;">Send reset email</button>
+        <div id="reset-msg" class="hidden" style="margin-top: 14px; padding: 10px 14px; border-radius: 8px; font-size: 13px; background: var(--green-soft); color: var(--green-hi); border: 1px solid #b8dece;"></div>
       </div>
     </section>
 
@@ -301,6 +363,31 @@
     </section>
   </div>
 
+  <!-- Share modal -->
+  <div id="share-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>Share task</h3>
+          <div class="modal-task-name" id="share-modal-title"></div>
+        </div>
+        <button class="modal-close" id="share-modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="share-list" class="share-list"></div>
+        <div class="share-add">
+          <input id="share-email" type="email" placeholder="colleague@example.com" />
+          <select id="share-level">
+            <option value="read">Read</option>
+            <option value="edit">Edit</option>
+          </select>
+          <button id="share-add-btn" class="btn-primary">Share</button>
+        </div>
+        <div id="share-error" class="error" style="margin: 12px 0 0;"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -335,8 +422,9 @@
     let mode = "signin";
     let todos = [];
     let filter = "all";
-    let addingSubFor = null; // id of the parent row whose sub-task editor is open
-    let editingId = null;    // id of the task currently being edited inline
+    let addingSubFor = null;
+    let editingId = null;
+    let currentUser = null;
 
     function showErr(el, msg) { el.textContent = "Error: " + msg; el.style.display = "block"; }
     function hideErr(el) { el.style.display = "none"; }
@@ -345,6 +433,8 @@
     function setMode(m) {
       mode = m;
       hideErr(authError);
+      document.getElementById("forgot-section").classList.add("hidden");
+      document.getElementById("forgot-toggle").classList.toggle("hidden", m !== "signin");
       if (m === "signin") {
         authTitle.textContent = "Sign in";
         authSub.textContent = "Sign in to access your tasks.";
@@ -373,20 +463,61 @@
       if (error) { showErr(authError, error.message); return; }
     }
 
+    // --- Forgot password ---
+    const forgotSection = document.getElementById("forgot-section");
+    const forgotToggle  = document.getElementById("forgot-toggle");
+    const forgotLink    = document.getElementById("forgot-link");
+    const resetBtn      = document.getElementById("reset-btn");
+    const resetEmailEl  = document.getElementById("reset-email");
+    const resetMsg      = document.getElementById("reset-msg");
+
+    forgotLink.addEventListener("click", () => {
+      const open = !forgotSection.classList.contains("hidden");
+      forgotSection.classList.toggle("hidden", open);
+      resetMsg.classList.add("hidden");
+      resetEmailEl.value = emailEl.value; // pre-fill if they typed their email
+      if (!open) resetEmailEl.focus();
+    });
+
+    resetBtn.addEventListener("click", async () => {
+      const email = resetEmailEl.value.trim();
+      if (!email) { resetEmailEl.focus(); return; }
+      resetBtn.disabled = true;
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.href,
+      });
+      resetBtn.disabled = false;
+      if (error) {
+        resetMsg.textContent = "Error: " + error.message;
+        resetMsg.style.background = "#fdeceb";
+        resetMsg.style.color = "#b3322c";
+        resetMsg.style.borderColor = "#f6d2d0";
+      } else {
+        resetMsg.textContent = "Check your email for a reset link.";
+        resetMsg.style.background = "var(--green-soft)";
+        resetMsg.style.color = "var(--green-hi)";
+        resetMsg.style.borderColor = "#b8dece";
+      }
+      resetMsg.classList.remove("hidden");
+    });
+
     authBtn.addEventListener("click", submitAuth);
     passEl.addEventListener("keydown", (e) => { if (e.key === "Enter") submitAuth(); });
     signoutBtn.addEventListener("click", () => sb.auth.signOut());
 
-    sb.auth.onAuthStateChange((_event, session) => {
+    sb.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
+        currentUser = session.user;
         authView.classList.add("hidden");
         todoView.classList.remove("hidden");
         signoutBtn.classList.remove("hidden");
         whoEl.classList.remove("hidden");
         mainNav.classList.remove("hidden");
-        whoEl.textContent = "Signed in as " + session.user.email;
+        const { data: profile } = await sb.from("profiles").select("display_name").eq("user_id", session.user.id).maybeSingle();
+        whoEl.textContent = "Hi, " + (profile?.display_name || session.user.email);
         load();
       } else {
+        currentUser = null;
         todoView.classList.add("hidden");
         signoutBtn.classList.add("hidden");
         whoEl.classList.add("hidden");
@@ -511,6 +642,12 @@
       const tdTask = document.createElement("td");
       tdTask.className = "task";
       tdTask.textContent = t.text;
+      if (!isSub && currentUser && t.user_id !== currentUser.id) {
+        const badge = document.createElement("span");
+        badge.className = "share-badge";
+        badge.textContent = "shared";
+        tdTask.appendChild(badge);
+      }
 
       const tdResp = document.createElement("td");
       if (t.responsible) { tdResp.className = "responsible"; tdResp.textContent = t.responsible; }
@@ -527,7 +664,7 @@
 
       const tdAct = document.createElement("td");
       tdAct.className = "col-actions";
-      if (!isSub) {
+      if (!isSub && currentUser && t.user_id === currentUser.id) {
         const addSub = document.createElement("button");
         addSub.className = "add-sub";
         addSub.textContent = "＋";
@@ -537,6 +674,14 @@
           render();
         });
         tdAct.appendChild(addSub);
+
+        const shareBtn = document.createElement("button");
+        shareBtn.className = "edit-btn";
+        shareBtn.textContent = "🔗";
+        shareBtn.title = "Share task";
+        shareBtn.style.fontSize = "13px";
+        shareBtn.addEventListener("click", () => openShareModal(t.id, t.text));
+        tdAct.appendChild(shareBtn);
       }
       const edit = document.createElement("button");
       edit.className = "edit-btn";
@@ -705,6 +850,81 @@
         render();
       });
     });
+
+    // --- Share modal ---
+    const shareModal      = document.getElementById("share-modal");
+    const shareModalTitle = document.getElementById("share-modal-title");
+    const shareList       = document.getElementById("share-list");
+    const shareEmailEl    = document.getElementById("share-email");
+    const shareLevelEl    = document.getElementById("share-level");
+    const shareAddBtn     = document.getElementById("share-add-btn");
+    const shareError      = document.getElementById("share-error");
+    let shareTaskId       = null;
+
+    document.getElementById("share-modal-close").addEventListener("click", closeShareModal);
+    shareModal.addEventListener("click", (e) => { if (e.target === shareModal) closeShareModal(); });
+
+    function openShareModal(taskId, taskText) {
+      shareTaskId = taskId;
+      shareModalTitle.textContent = taskText;
+      shareEmailEl.value = "";
+      hideErr(shareError);
+      shareModal.classList.remove("hidden");
+      loadShareList();
+      shareEmailEl.focus();
+    }
+
+    function closeShareModal() {
+      shareModal.classList.add("hidden");
+      shareTaskId = null;
+    }
+
+    async function loadShareList() {
+      shareList.innerHTML = "";
+      const { data, error } = await sb.from("task_shares")
+        .select("id, shared_with_email, access_level")
+        .eq("task_id", shareTaskId)
+        .order("created_at");
+      if (error) { showErr(shareError, error.message); return; }
+      if (!data.length) {
+        shareList.innerHTML = '<p class="share-empty">Not shared with anyone yet.</p>';
+        return;
+      }
+      data.forEach((s) => {
+        const div = document.createElement("div");
+        div.className = "share-item";
+        div.innerHTML = `
+          <span class="share-email">${s.shared_with_email}</span>
+          <span class="share-level ${s.access_level}">${s.access_level}</span>
+          <button class="share-remove" title="Remove" data-id="${s.id}">×</button>`;
+        div.querySelector(".share-remove").addEventListener("click", async () => {
+          await sb.from("task_shares").delete().eq("id", s.id);
+          loadShareList();
+          render();
+        });
+        shareList.appendChild(div);
+      });
+    }
+
+    shareAddBtn.addEventListener("click", async () => {
+      const email = shareEmailEl.value.trim().toLowerCase();
+      if (!email) { shareEmailEl.focus(); return; }
+      if (email === currentUser?.email) { showErr(shareError, "You can't share a task with yourself."); return; }
+      hideErr(shareError);
+      shareAddBtn.disabled = true;
+      const { error } = await sb.from("task_shares").insert({
+        task_id: shareTaskId,
+        owner_id: currentUser.id,
+        shared_with_email: email,
+        access_level: shareLevelEl.value,
+      });
+      shareAddBtn.disabled = false;
+      if (error) { showErr(shareError, error.message); return; }
+      shareEmailEl.value = "";
+      loadShareList();
+    });
+
+    shareEmailEl.addEventListener("keydown", (e) => { if (e.key === "Enter") shareAddBtn.click(); });
 
     setMode("signin");
   </script>
